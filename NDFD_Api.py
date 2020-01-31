@@ -4,7 +4,7 @@ API Reference: https://graphical.weather.gov/xml/rest.php#degrib
 Author: Tuomas Talvitie
 Year: 2020
 """
-
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
@@ -139,6 +139,9 @@ def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolution
 def _url(path=''):
     return 'http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdXMLclient.php?' + path
 
+
+
+
 def _run(q):
 
 	print(_url(q))
@@ -149,14 +152,19 @@ def _run(q):
 		raise ApiError('GET /tasks/ {}'.format(resp.status_code))
 	print(resp.content)
 
-
+#test each API call
 def _run_tests(_tests):
 	for i in _tests.keys():
-		_run(_tests[i])
-		print('*************** QUERY ', i, " HAS SUCCEEDED ************")
+		try:
+			_run(_tests[i])
+			print('*************** QUERY ', i, " HAS SUCCEEDED ************")
+		except:
+			print("en error ocurred")
+			e = sys.exc_info()[0]
+			print(e)
+
 
 _tests={
-
 	'q1':subGridDataQuery('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-01T17:00:00', '2020-02-02T18:00:00'),
 	'q2':singlePointDataQuery('37.33', '-122.03','time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
 	'q3':listPointDataQuery('time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
@@ -168,7 +176,7 @@ _tests={
 
 
 if __name__ == '__main__':
-	_run(_tests['q6'])
-	# _run_tests(_tests)
+	# _run(_tests['q6'])
+	_run_tests(_tests)
 
 
