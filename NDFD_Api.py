@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import datetime
 import requests
 from urllib.parse import urlencode, quote
+import xml.etree.ElementTree as ET
+
 
 # start = datetime.datetime.today() + datetime.timedelta(days=1)
 # end = datetime.datetime.today() + datetime.timedelta(days=2)
@@ -139,24 +141,34 @@ def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolution
 def _url(path=''):
     return 'http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdXMLclient.php?' + path
 
+#Still in dev, now returns values
+def parseXml(data):
+	root = ET.fromstring(data.content)
+	print(root)
+	# for child in root.iter('*'):
+ #   		print(child.tag, child.attrib)
+	for child in root.iter('*'):
+		print(child.tag, child.text)
+	for i in root.xpath("//time-layout"):
+		print(i)
+	return 
 
 
 
-def _run(q):
-
+def run_request(q):
 	print(_url(q))
 	resp = requests.get(_url(q))
 	if resp.status_code != 200:
 		# This means something went wrong.
 		print(resp.status_code)
 		raise ApiError('GET /tasks/ {}'.format(resp.status_code))
-	print(resp.content)
+	return resp
 
 #test each API call
-def _run_tests(_tests):
+def run_request_tests(_tests):
 	for i in _tests.keys():
 		try:
-			_run(_tests[i])
+			run_request(_tests[i])
 			print('*************** QUERY ', i, " HAS SUCCEEDED ************")
 		except:
 			print("en error ocurred")
@@ -170,13 +182,15 @@ _tests={
 	'q3':listPointDataQuery('time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
 	'q4':listCoordsInGrid('35.00', '-82.00', '35.50', '-81.50', '20.0'),
 	'q5':getDataZipcode('20190 25414', 'time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35' ),
-	'q6':subGrid('38.0', '-97.4', '50.0', '50.0', '20.0' ,'time-series','2020-02-01T17:00:00','2020-02-02T18:00:00')
+	'q6':subGrid('38.0', '-97.4', '50.0', '50.0', '20.0' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00')
 	}
 
 
 
 if __name__ == '__main__':
-	# _run(_tests['q6'])
-	_run_tests(_tests)
+	data=run_request(_tests['q2'])
+	# run_request_tests(_tests)
+	parseXml(data)
+
 
 
