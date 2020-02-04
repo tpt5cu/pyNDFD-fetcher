@@ -179,7 +179,38 @@ def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolution
 
 	return urlString
 
+def line(endPoint1Lat, endPoint1Lon, endPoint2Lat, endPoint2Lon, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']):
+	#Split into 3 dictionaries, each are encoded in a different manner
+	params = {
+		'endPoint1Lat':endPoint1Lat,
+		'endPoint1Lon':endPoint1Lon,
+		'endPoint2Lat':endPoint2Lat,
+		'endPoint2Lon':endPoint2Lon,
+		'product':product
+	}
+	#Begin/end has special encoding
+	params2 = {'begin':begin,
+	'end':end
+	}
+	params3 = {
+		'Unit':Unit,
+	}
+
+	urlString = urlencode(params)
+	subString = ''
+	for key, value in params2.items():
+		subString += '&'+str(key) + '=' + str(value)
+	urlString+=subString
+	for i in optional_params:
+		params3[i] = i
+	urlString +='&' + urlencode(params3)
+
+	return urlString
+
+
+
 #For daywise
+#Not complete
 def subGridDayWise(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, startDate, numDays):
 	params = {
 		'centerPointLat': centerPointLat,
@@ -248,12 +279,14 @@ _tests={
 	# 'q6':subGrid('38.0', '-97.4', '4.0', '4.0', '0.001' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00'),
 	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-04T20:00:00','2020-02-04T20:00:00'),
 	# 'q8':subGridDayWise('38.0', '-97.4', '5.0', '5.0', '5.0', '2020-02-04', '1')
+	#Test from Dominion Roseland Substation
+	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-02-04T20:00:00','2020-02-04T20:00:00')
 	}
 
 
 
 if __name__ == '__main__':
-	# data=run_request(_tests['q7'])
+	data=run_request(_tests['q9'])
 	# print(data.content)
 	# run_tests(_tests)
 	# parseXml(data)
