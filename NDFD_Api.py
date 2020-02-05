@@ -280,13 +280,13 @@ _tests={
 	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-04T20:00:00','2020-02-04T20:00:00'),
 	# 'q8':subGridDayWise('38.0', '-97.4', '5.0', '5.0', '5.0', '2020-02-04', '1')
 	#Test from Dominion Roseland Substation
-	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-02-04T20:00:00','2020-02-04T20:00:00')
+	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-02-02T20:00:00','2020-02-02T20:00:00')
 	}
 
 
 
 if __name__ == '__main__':
-	data=run_request(_tests['q9'])
+	# data=run_request(_tests['q9'])
 	# print(data.content)
 	# run_tests(_tests)
 	# parseXml(data)
