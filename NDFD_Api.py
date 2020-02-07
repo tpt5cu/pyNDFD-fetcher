@@ -1,5 +1,6 @@
 #python3
-"""API for fetching NDFD data via their rest service. Written in python 3. In development
+"""API for fetching NDFD data via their rest service. Written in python 3. In development.
+Right now subGrid and getDataZipcode work well.
 API Reference: https://graphical.weather.gov/xml/rest.php#degrib
 Author: Tuomas Talvitie
 Year: 2020
@@ -13,13 +14,6 @@ from urllib.parse import urlencode, quote
 import xml.etree.ElementTree as ET
 import xmltodict
 
-
-# start = datetime.datetime.today() + datetime.timedelta(days=1)
-# end = datetime.datetime.today() + datetime.timedelta(days=2)
-
-# params = {'lat1':'33.8835', 'lon1':'-80.0679', 'lat2':'33.8835', 'lon2':'-80.0679', 'resolutionSub':'5', 'product':'time-series', 'begin':'2020-02-01T17:12:35', 'end':'2020-06-02T17:12:35', 'appt':'appt', 'rh':'rh', "temp_r":"temp_r", "temp":"temp" }
-
-# print(urlencode({'zipCodeList':'20190 25414'}))
 """
 Single Point Unsummarized Data: Returns DWML-encoded NDFD data for a point
 """
@@ -44,8 +38,7 @@ def singlePointDataQuery(lat1, lon1, product, begin, end, Unit='m', optional_par
 	for i in optional_params:
 		params3[i] = i
 	urlString +='&' + urlencode(params3)
-
-	return urlencode(params)
+	return urlString
 
 """
 Multiple Point Unsummarized Data: Returns DWML-encoded NDFD data for a list of points
@@ -73,7 +66,7 @@ def listPointDataQuery(product, begin, end, listLatLon=('38.99,-77.02 39.70,-104
 		params3[i] = i
 	urlString +='&' + urlencode(params3)
 
-	return urlencode(params)
+	return urlString
 
 """
 Unsummarized Data for a Subgrid:
@@ -104,7 +97,7 @@ def subGridDataQuery(lat1, lon1, lat2, lon2, resolutionSub, product, begin, end,
 		params3[i] = i
 	urlString +='&' + urlencode(params3)
 
-	return urlencode(params)
+	return urlString
 
 """A List of NDFD Points for a Subgrid: Returns the WGS84 latitude and longitude 
 values of all the NDFD grid points within a rectangular subgrid as defined by points 
@@ -130,6 +123,14 @@ Unsummarized Data for One or More Zipcodes:
 Returns DWML-encoded NDFD data for one or more zip codes 
 (50 United States and Puerto Rico). The returned list of points is suitable for use in 
 inputs listLatLon and gmlListLatLon.
+
+Parameters:
+zipcodes: String of zipcodes seperated by a space ie '22152 22150 xxxxx '
+product: string of type of product, for this make sure it is 'time-series'
+begin: string of beginning time in 'YYYY-MM-DDT00:00:00'
+end: string of end time in 'YYYY-MM-DDT00:00:00'
+optional_params: list of strings of weather properties to watch
+
 """
 
 #Works and works well
@@ -148,6 +149,19 @@ def getDataZipcode(zipcodes, product, begin, end, optional_params=['wspd', 'wdir
 Unsummarized Data for a Subgrid Defined by a Center Point: 
 Returns DWML-encoded NDFD data for a rectangle defined by a center point and 
 distances in the latitudinal and longitudinal directions.
+
+Parameters:
+centerPointLat/centerPointLon: string of coords of center point of grid
+distanceLat/distanceLon: string of latitudinal distances and longitudinal distances
+resolutionSquare: string of resolution of grid. Smallest is ~ 5km
+product: string of type of product, for this make sure it is 'time-series'
+begin: string of beginning time in 'YYYY-MM-DDT00:00:00'
+end: string of end time in 'YYYY-MM-DDT00:00:00'
+unit: string of imperial or metric units
+optional_params: list of strings of weather properties to watch
+
+
+
 """
 
 def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']):
@@ -204,33 +218,29 @@ def line(endPoint1Lat, endPoint1Lon, endPoint2Lat, endPoint2Lon, product, begin,
 	for i in optional_params:
 		params3[i] = i
 	urlString +='&' + urlencode(params3)
-
 	return urlString
 
 
 
 #For daywise
 #Not complete
-def subGridDayWise(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, startDate, numDays):
-	params = {
-		'centerPointLat': centerPointLat,
-		'centerPointLon': centerPointLon,
-		'distanceLat': distanceLat,
-		'distanceLon': distanceLon,
-		'resolutionSquare': resolutionSquare,
-		'startDate': startDate,
-		'numDays':numDays
-	}
-	return urlencode(params, doseq=True)
+# def subGridDayWise(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, startDate, numDays):
+# 	params = {
+# 		'centerPointLat': centerPointLat,
+# 		'centerPointLon': centerPointLon,
+# 		'distanceLat': distanceLat,
+# 		'distanceLon': distanceLon,
+# 		'resolutionSquare': resolutionSquare,
+# 		'startDate': startDate,
+# 		'numDays':numDays
+# 	}
+# 	return urlencode(params, doseq=True)
 
 #Main URL path
 def _url(path=''):
     return 'http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdXMLclient.php?' + path
 
-
-
-
-#Still in dev, now returns values
+#Still in dev, now returns values for certain methods
 def parseXml(data):
 	outDict = {}
 	#Load xml object into dictionary
@@ -261,7 +271,6 @@ def parseXml(data):
 		'pointxx'
 	}
 	"""
-	print(outDict)
 	return outDict
 
 
@@ -277,10 +286,10 @@ def run_request(q):
 
 #test each API call
 def run_tests(_tests):
-	for i in _tests.keys():
+	for key, val in _tests.items():
 		try:
-			run_request(_tests[i])
-			print('*************** QUERY ', i, " HAS SUCCEEDED ************")
+			run_request(val)
+			print('*************** QUERY ', key, " HAS SUCCEEDED ************")
 		except:
 			print('*************** QUERY ', i, " FAILED ************")
 			print("en error ocurred")
@@ -289,29 +298,29 @@ def run_tests(_tests):
 
 
 _tests={
-	'q1':singlePointDataQuery('37.33', '-122.03','time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
+	'q1':singlePointDataQuery('37.33', '-122.03','time-series', '2020-02-07T17:12:35', '2020-02-10T17:12:35'),
 	'q2':listPointDataQuery('time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
-	'q3':subGridDataQuery('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
+	# 'q3':subGridDataQuery('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
 	'q4':listCoordsInGrid('35.00', '-82.00', '35.50', '-81.50', '20.0'),
-	'q5':getDataZipcode('22152 22150', 'time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35' ),
+	'q5':getDataZipcode('22152 22150', 'time-series', '2020-02-07T17:12:35', '2020-02-08T17:12:35' ),
 	# 'q6':subGrid('38.0', '-97.4', '4.0', '4.0', '0.001' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00'),
-	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-04T20:00:00','2020-02-04T20:00:00'),
+	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-08T20:00:00','2020-02-08T20:00:00'),
 	# 'q8':subGridDayWise('38.0', '-97.4', '5.0', '5.0', '5.0', '2020-02-04', '1')
 	#Test from Dominion Roseland Substation
-	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-02-02T20:00:00','2020-02-02T20:00:00')
+	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-02-10T20:00:00','2020-02-10T20:00:00')
 	}
 
 
 
 if __name__ == '__main__':
-	# data=run_request(_tests['q5'])
-	# print(data.content)
 	# run_tests(_tests)
-	# dataDict = parseXml(data)
-	#Example
-	data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35' ))
+	#Example for zpi code API, final dataDict contains structured data
+	data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-02-07T17:12:35', '2020-02-08T17:12:35' ))
 	dataDict = parseXml(data)
-	print(dataDict['point1'])
+	print(dataDict)
+
+
+
 
 
 
