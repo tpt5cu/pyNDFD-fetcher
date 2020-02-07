@@ -232,19 +232,37 @@ def _url(path=''):
 
 #Still in dev, now returns values
 def parseXml(data):
-	root = ET.fromstring(data.content)
-	print(root)
-	# for child in root.iter('*'):
- #   		print(child.tag, child.attrib)
-	# for child in root.iter('*'):
-	# 	print(child.tag, child.text)
-	# for i in root.xpath("//time-layout"):
-	# 	print(i)
+	outDict = {}
+	#Load xml object into dictionary
 	d = xmltodict.parse(data.content)	
+	#use dataDict as base content dictionary, we only care about this
 	dataDict = d['dwml']['data']
-	for key, val in dataDict.items():
-		print(key, val)
-	return 
+	#Put list of points  into outDict, lat and long are now called @latitude and @longitude
+	for key in dataDict['location']:
+		outDict[key['location-key']] = [{'loc':key['point']}]
+	#Make a faux list called locationsList. This is iterated over to fill outDict for now because xml structure is annoying.
+	locationsList = list(outDict.keys())
+	for i in range(len(locationsList)):
+		for j in range(len((dataDict['parameters'][i]['wind-speed']['value']))):
+			outDict[locationsList[i]].append({'wind-speed':dataDict['parameters'][i]['wind-speed']['value'][j]})
+			outDict[locationsList[i]].append({'wind-direction':dataDict['parameters'][i]['direction']['value'][j]})
+			outDict[locationsList[i]].append({'time':dataDict['time-layout']['start-valid-time'][j]})
+	#Maybe make time stamp a key for other info
+	#For structure is:
+	"""
+	outDict = {
+		'point1':{[
+			{'loc':{(@latitude, '00.00'), (@longitude, '00.00')}},
+			{'wind-speed':'6'}, 
+			{'wind-direction':'9'}, 
+			{'time':2020-02-06T22:00:00-05:00'}]
+		}
+		'point2':{same struct as above},
+		'pointxx'
+	}
+	"""
+	print(outDict)
+	return outDict
 
 
 
@@ -275,7 +293,7 @@ _tests={
 	'q2':listPointDataQuery('time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
 	'q3':subGridDataQuery('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
 	'q4':listCoordsInGrid('35.00', '-82.00', '35.50', '-81.50', '20.0'),
-	'q5':getDataZipcode('20190 25414', 'time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35' ),
+	'q5':getDataZipcode('22152 22150', 'time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35' ),
 	# 'q6':subGrid('38.0', '-97.4', '4.0', '4.0', '0.001' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00'),
 	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-04T20:00:00','2020-02-04T20:00:00'),
 	# 'q8':subGridDayWise('38.0', '-97.4', '5.0', '5.0', '5.0', '2020-02-04', '1')
@@ -286,10 +304,14 @@ _tests={
 
 
 if __name__ == '__main__':
-	# data=run_request(_tests['q9'])
+	# data=run_request(_tests['q5'])
 	# print(data.content)
 	# run_tests(_tests)
-	# parseXml(data)
+	# dataDict = parseXml(data)
+	#Example
+	data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35' ))
+	dataDict = parseXml(data)
+	print(dataDict['point1'])
 
 
 
