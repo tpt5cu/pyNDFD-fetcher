@@ -240,13 +240,23 @@ def line(endPoint1Lat, endPoint1Lon, endPoint2Lat, endPoint2Lon, product, begin,
 def _url(path=''):
     return 'http://www.weather.gov/forecasts/xml/sample_products/browser_interface/ndfdXMLclient.php?' + path
 
+
+#This function acts as a general xml parser
+def generalParseXml(data):
+	o = xmltodict.parse(data.content)
+	d = json.dumps(o)
+	d = json.loads(d)
+	return d
+	
+
 #Still in dev, now returns values for certain methods
-def parseXml(data):
+def customParseXml(data):
 	outDict = {}
 	#Load xml object into dictionary
 	d = xmltodict.parse(data.content)	
 	#use dataDict as base content dictionary, we only care about this
 	dataDict = d['dwml']['data']
+	print(dataDict)
 	#Put list of points  into outDict, lat and long are now called @latitude and @longitude
 	for key in dataDict['location']:
 		outDict[key['location-key']] = [{'loc':key['point']}]
@@ -274,6 +284,35 @@ def parseXml(data):
 	return outDict
 
 
+#Still in dev, may combine with general customParseXml function
+def customParseXmlSinglePoint(data):
+	#outDict is output structure, convieniently parsed
+	outDict = {}
+	d = xmltodict.parse(data.content)	
+	#use dataDict as base content dictionary, we only care about this
+	#locKey is key to the point in question. in the single point querery, it is point1
+	#Lats and lons
+	locs = d['dwml']['data']['location']
+	locKey = locs['location-key']
+	lat = locs['point']['@latitude']
+	lon = locs['point']['@longitude']
+	outDict[locKey] = {'latitude':lat, 'longitude':lon}
+	outDict[locKey]['data'] = []
+	#now begins the parsing of the xml body. It is not the most efficient logic as of now
+	#but im sure this can be fixed!
+	for i in (d['dwml']['data']['time-layout']['start-valid-time']):
+		outDict[locKey]['data'].append([{'datetime':i}])
+	params = list((d['dwml']['data']['parameters'].keys()))
+	for param in range(1,len(params)):
+		idx = 0
+		for value in d['dwml']['data']['parameters'][params[param]]['value']:
+			outDict[locKey]['data'][idx].append({params[param]:value})
+			idx+=1
+
+	return outDict
+
+
+
 
 def run_request(q):
 	print(_url(q))
@@ -298,16 +337,16 @@ def run_tests(_tests):
 
 
 _tests={
-	'q1':singlePointDataQuery('37.33', '-122.03','time-series', '2020-02-07T17:12:35', '2020-02-10T17:12:35'),
-	'q2':listPointDataQuery('time-series', '2020-02-01T17:12:35', '2020-06-02T17:12:35'),
+	'q1':singlePointDataQuery('37.33', '-122.03','time-series', '2020-06-07T17:12:35', '2020-06-10T17:12:35'),
+	'q2':listPointDataQuery('time-series', '2020-06-07T17:12:35', '2020-06-10T17:12:35'),
 	# 'q3':subGridDataQuery('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
 	'q4':listCoordsInGrid('35.00', '-82.00', '35.50', '-81.50', '20.0'),
-	'q5':getDataZipcode('22152 22150', 'time-series', '2020-02-07T17:12:35', '2020-02-08T17:12:35' ),
+	'q5':getDataZipcode('22152 22150', 'time-series', '2020-05-21T12:00:00', '2020-05-22T17:00:00' ),
 	# 'q6':subGrid('38.0', '-97.4', '4.0', '4.0', '0.001' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00'),
-	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-08T20:00:00','2020-02-08T20:00:00'),
+	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-06-07T17:12:35', '2020-06-10T17:12:35'),
 	# 'q8':subGridDayWise('38.0', '-97.4', '5.0', '5.0', '5.0', '2020-02-04', '1')
 	#Test from Dominion Roseland Substation
-	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-02-10T20:00:00','2020-02-10T20:00:00')
+	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-06-07T17:12:35', '2020-06-10T17:12:35')
 	}
 
 
@@ -315,9 +354,19 @@ _tests={
 if __name__ == '__main__':
 	# run_tests(_tests)
 	#Example for zpi code API, final dataDict contains structured data
-	data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-02-07T17:12:35', '2020-02-08T17:12:35' ))
-	dataDict = parseXml(data)
-	print(dataDict)
+	# data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-04-07T17:12:35', '2020-05-08T17:12:35' ))
+	# dataDict = customParseXml(data)
+	# print(dataDict)
+
+
+	# data = run_request(subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-08T20:00:00','2020-02-08T20:00:00'))
+	# dataDict = customParseXml(data)
+	# print(dataDict)
+
+	data = run_request(singlePointDataQuery('39.0000', '-77.0000','time-series', '2020-05-21T12:00:00', '2020-05-22T17:00:00'))
+	outData = customParseXmlSinglePoint(data)
+	print(outData)
+
 
 
 
