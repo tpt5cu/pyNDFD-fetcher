@@ -242,15 +242,15 @@ def _url(path=''):
 
 
 #This function acts as a general xml parser
-def generalParseXml(data):
+def _generalParseXml(data):
 	o = xmltodict.parse(data.content)
 	d = json.dumps(o)
 	d = json.loads(d)
 	return d
-	
+
 
 #Still in dev, now returns values for certain methods
-def customParseXml(data):
+def _customParseXml(data):
 	outDict = {}
 	#Load xml object into dictionary
 	d = xmltodict.parse(data.content)	
@@ -284,8 +284,8 @@ def customParseXml(data):
 	return outDict
 
 
-#Still in dev, may combine with general customParseXml function
-def customParseXmlSinglePoint(data):
+#Still in dev, may combine with general _customParseXml function
+def _customParseXmlSinglePoint(data):
 	#outDict is output structure, convieniently parsed
 	outDict = {}
 	d = xmltodict.parse(data.content)	
@@ -355,16 +355,16 @@ if __name__ == '__main__':
 	# run_tests(_tests)
 	#Example for zpi code API, final dataDict contains structured data
 	# data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-04-07T17:12:35', '2020-05-08T17:12:35' ))
-	# dataDict = customParseXml(data)
+	# dataDict = _customParseXml(data)
 	# print(dataDict)
 
 
 	# data = run_request(subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-08T20:00:00','2020-02-08T20:00:00'))
-	# dataDict = customParseXml(data)
+	# dataDict = _customParseXml(data)
 	# print(dataDict)
 
 	data = run_request(singlePointDataQuery('39.0000', '-77.0000','time-series', '2020-05-21T12:00:00', '2020-05-22T17:00:00'))
-	outData = customParseXmlSinglePoint(data)
+	outData = _customParseXmlSinglePoint(data)
 	print(outData)
 
 
