@@ -14,6 +14,24 @@ from urllib.parse import urlencode, quote
 import xml.etree.ElementTree as ET
 import xmltodict
 
+
+class ApiError(Exception):
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+        print(self.message)
+        raise Exception(self.message + ' ' + str(self.status_code))
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        print(rv['message'])
+        return rv
+
 """
 Single Point Unsummarized Data: Returns DWML-encoded NDFD data for a point
 """
@@ -319,8 +337,7 @@ def run_request(q):
 	resp = requests.get(_url(q))
 	if resp.status_code != 200:
 		# This means something went wrong.
-		print(resp.status_code)
-		raise ApiError('GET /tasks/ {}'.format(resp.status_code))
+		raise ApiError(resp.text, resp.status_code)
 	return resp
 
 #test each API call
@@ -354,18 +371,33 @@ _tests={
 if __name__ == '__main__':
 	# run_tests(_tests)
 	#Example for zpi code API, final dataDict contains structured data
-	# data = run_request(getDataZipcode('22152 22150', 'time-series', '2020-04-07T17:12:35', '2020-05-08T17:12:35' ))
-	# dataDict = _customParseXml(data)
-	# print(dataDict)
+	data = run_request(getDataZipcode('22152', 'time-series', '2020-07-12T17:00:00', '2020-07-14T17:00:00' ))
+	dataDict = _customParseXml(data)
+	print(dataDict)
 
 
 	# data = run_request(subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-08T20:00:00','2020-02-08T20:00:00'))
 	# dataDict = _customParseXml(data)
 	# print(dataDict)
 
-	data = run_request(singlePointDataQuery('39.0000', '-77.0000','time-series', '2020-05-21T12:00:00', '2020-05-22T17:00:00'))
-	outData = _customParseXmlSinglePoint(data)
-	print(outData)
+	# data = run_request(singlePointDataQuery('39.0000', '-77.0000','time-series', '2020-07-10T12:00:00', '2020-07-11T17:00:00'))
+	# outData = _customParseXmlSinglePoint(data)
+	# print(outData)
+
+	"""
+	Three points
+	40.0, -121.4
+	(37, -96.2)
+	44, -71)
+	"""
+	coords = ('40.0', '-121.4')
+	coords = ('37.0', '-96.2')
+	# coords = ('44.0', '-71.00')
+
+	# data = run_request(subGrid(coords[0], coords[1], '20.0', '20.0', '10.0' ,'time-series', '2020-07-10T00:00:00', '2020-07-11T00:00:00'))
+	# print(data.content)
+	# outData = _customParseXmlSinglePoint(data)
+	# print(outData)
 
 
 
