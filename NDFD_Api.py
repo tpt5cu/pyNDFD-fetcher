@@ -13,6 +13,7 @@ import requests
 from urllib.parse import urlencode, quote
 import xml.etree.ElementTree as ET
 import xmltodict
+import json
 
 
 class ApiError(Exception):
@@ -90,8 +91,8 @@ def listPointDataQuery(product, begin, end, listLatLon=('38.99,-77.02 39.70,-104
 Unsummarized Data for a Subgrid:
  Returns DWML-encoded NDFD data for a subgrid defined by a lower left and upper right point
 """
-###Deprecated, examples online dont work
-def subGridDataQuery(lat1, lon1, lat2, lon2, resolutionSub, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']):
+###THIS API DOES NOT WORK
+def subGridCornerPoints(lat1, lon1, lat2, lon2, resolutionSub, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']):
 	params = {
 		'lat1':lat1,
 		'lon1':lon1,
@@ -356,7 +357,7 @@ def run_tests(_tests):
 _tests={
 	'q1':singlePointDataQuery('37.33', '-122.03','time-series', '2020-06-07T17:12:35', '2020-06-10T17:12:35'),
 	'q2':listPointDataQuery('time-series', '2020-06-07T17:12:35', '2020-06-10T17:12:35'),
-	# 'q3':subGridDataQuery('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
+	# 'q3':subGridCornerPoints('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
 	'q4':listCoordsInGrid('35.00', '-82.00', '35.50', '-81.50', '20.0'),
 	'q5':getDataZipcode('22152 22150', 'time-series', '2020-05-21T12:00:00', '2020-05-22T17:00:00' ),
 	# 'q6':subGrid('38.0', '-97.4', '4.0', '4.0', '0.001' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00'),
@@ -366,42 +367,23 @@ _tests={
 	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-06-07T17:12:35', '2020-06-10T17:12:35')
 	}
 
+################################ Here Begins induvidual data requests #############################################
+
+def getSubGridData(centerLat, centerLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit='m', optional_params=[]):
+	data = run_request(subGrid(centerLat, centerLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']))
+	outData = _generalParseXml(data)
+	return outData
 
 
 if __name__ == '__main__':
 	# run_tests(_tests)
-	#Example for zpi code API, final dataDict contains structured data
-	data = run_request(getDataZipcode('22152', 'time-series', '2020-07-12T17:00:00', '2020-07-14T17:00:00' ))
-	dataDict = _customParseXml(data)
-	print(dataDict)
+	lat = 40.758701
+	lon = -111.876183
+	dist = 20
+	resolution = 20
+	start = '2020-07-15T00:00:00'
+	end = '2020-07-16T00:00:00'
 
-
-	# data = run_request(subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-02-08T20:00:00','2020-02-08T20:00:00'))
-	# dataDict = _customParseXml(data)
-	# print(dataDict)
-
-	# data = run_request(singlePointDataQuery('39.0000', '-77.0000','time-series', '2020-07-10T12:00:00', '2020-07-11T17:00:00'))
-	# outData = _customParseXmlSinglePoint(data)
-	# print(outData)
-
-	"""
-	Three points
-	40.0, -121.4
-	(37, -96.2)
-	44, -71)
-	"""
-	coords = ('40.0', '-121.4')
-	coords = ('37.0', '-96.2')
-	# coords = ('44.0', '-71.00')
-
-	# data = run_request(subGrid(coords[0], coords[1], '20.0', '20.0', '10.0' ,'time-series', '2020-07-10T00:00:00', '2020-07-11T00:00:00'))
-	# print(data.content)
-	# outData = _customParseXmlSinglePoint(data)
-	# print(outData)
-
-
-
-
-
+	data = getSubGridData(str(lat), str(lon), str(dist), str(dist), str(resolution), 'time-series', start, end, optional_params=['critfireo', 'dryfireo'] )
 
 
