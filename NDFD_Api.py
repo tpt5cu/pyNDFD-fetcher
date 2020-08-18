@@ -14,6 +14,8 @@ from urllib.parse import urlencode, quote
 import xml.etree.ElementTree as ET
 import xmltodict
 import json
+from datetime import timedelta, datetime
+
 
 
 class ApiError(Exception):
@@ -183,7 +185,7 @@ optional_params: list of strings of weather properties to watch
 
 """
 
-def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']):
+def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit, optional_params):
 	#Split into 3 dictionaries, each are encoded in a different manner
 	params = {
 		'centerPointLat':centerPointLat,
@@ -348,42 +350,47 @@ def run_tests(_tests):
 			run_request(val)
 			print('*************** QUERY ', key, " HAS SUCCEEDED ************")
 		except:
-			print('*************** QUERY ', i, " FAILED ************")
+			print('*************** QUERY ', key, " FAILED ************")
 			print("en error ocurred")
 			e = sys.exc_info()[0]
 			print(e)
 
 
 _tests={
-	'q1':singlePointDataQuery('37.33', '-122.03','time-series', '2020-06-07T17:12:35', '2020-06-10T17:12:35'),
-	'q2':listPointDataQuery('time-series', '2020-06-07T17:12:35', '2020-06-10T17:12:35'),
+	'q1':singlePointDataQuery('37.33', '-122.03','time-series', str(datetime.now().isoformat()), str((datetime.now()+timedelta(days=1)).isoformat())),
+	'q2':listPointDataQuery('time-series', str(datetime.now().isoformat()), str((datetime.now()+timedelta(days=1)).isoformat())),
 	# 'q3':subGridCornerPoints('35.00', '-82.00', '35.5', '-81.50', '20.0', 'time-series', '2020-02-09T17:00:00', '2020-02-09T18:00:00'),
 	'q4':listCoordsInGrid('35.00', '-82.00', '35.50', '-81.50', '20.0'),
-	'q5':getDataZipcode('22152 22150', 'time-series', '2020-05-21T12:00:00', '2020-05-22T17:00:00' ),
+	'q5':getDataZipcode('22152 22150', 'time-series', str(datetime.now().isoformat()), str((datetime.now()+timedelta(days=1)).isoformat())),
 	# 'q6':subGrid('38.0', '-97.4', '4.0', '4.0', '0.001' ,'time-series','2020-02-01T17:00:00','2020-02-01T18:00:00'),
-	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series','2020-06-07T17:12:35', '2020-06-10T17:12:35'),
+	'q7':subGrid('40.7128', '-74.0060', '1.0', '1.0', '1.0' ,'time-series',str(datetime.now().isoformat()), str((datetime.now()+timedelta(days=1)).isoformat()),Unit='m', optional_params=['wspd', 'wdir']),
 	# 'q8':subGridDayWise('38.0', '-97.4', '5.0', '5.0', '5.0', '2020-02-04', '1')
 	#Test from Dominion Roseland Substation
-	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series','2020-06-07T17:12:35', '2020-06-10T17:12:35')
+	'q9':line('38.723', '-77.288854', '38.7499', '-77.339','time-series',str(datetime.now().isoformat()), str((datetime.now()+timedelta(days=1)).isoformat()))
 	}
 
 ################################ Here Begins induvidual data requests #############################################
-
-def getSubGridData(centerLat, centerLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit='m', optional_params=[]):
-	data = run_request(subGrid(centerLat, centerLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit='m', optional_params=['wspd', 'wdir']))
+def getSubGridData(centerLat, centerLon, distanceLat, distanceLon, resolutionSquare, product='time-series', begin=str(datetime.now().isoformat()), end=str((datetime.now()+timedelta(days=+1)).isoformat()), Unit='m', optional_params=['critfireo']):
+	data = run_request(subGrid(centerLat, centerLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit, optional_params))
 	outData = _generalParseXml(data)
 	return outData
 
 
 if __name__ == '__main__':
-	# run_tests(_tests)
-	lat = 40.758701
-	lon = -111.876183
-	dist = 20
-	resolution = 20
-	start = '2020-07-15T00:00:00'
-	end = '2020-07-16T00:00:00'
+	run_tests(_tests)
 
-	data = getSubGridData(str(lat), str(lon), str(dist), str(dist), str(resolution), 'time-series', start, end, optional_params=['critfireo', 'dryfireo'] )
 
+
+	# lat = 40.758701
+	# lon = -111.876183
+	# dist = 20
+	# resolution = 10
+	# start = str(datetime.now().isoformat())
+	# end = str((datetime.now()+timedelta(days=1)).isoformat())
+	# print(start, end)
+	# # start = '2020-08-20T00:00:00'
+	# # end = '2020-08-21T00:00:00'
+
+	# data = getSubGridData(str(lat), str(lon), str(dist), str(dist), str(resolution), 'time-series', start, end)
+	# print(data)
 
