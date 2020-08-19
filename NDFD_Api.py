@@ -1,8 +1,10 @@
 #python3
 """API for fetching NDFD data via their rest service. Written in python 3. In development.
 Right now subGrid and getDataZipcode work well.
-API Reference: https://graphical.weather.gov/xml/rest.php#degrib
+API Reference: https://graphical.weather.gov/xml/rest.php#what
 Author: Tuomas Talvitie
+github: tpt5cu
+email: tpt5cu@virginia.edu
 Year: 2020
 """
 import sys
@@ -185,7 +187,7 @@ optional_params: list of strings of weather properties to watch
 
 """
 
-def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, product, begin, end, Unit, optional_params):
+def subGrid(centerPointLat, centerPointLon, distanceLat, distanceLon, resolutionSquare, product='time-series', begin=str(datetime.now().isoformat()), end=str((datetime.now()+timedelta(days=+1)).isoformat()), Unit='m', optional_params=['wspd', 'wdir']):
 	#Split into 3 dictionaries, each are encoded in a different manner
 	params = {
 		'centerPointLat':centerPointLat,
@@ -343,6 +345,10 @@ def run_request(q):
 		raise ApiError(resp.text, resp.status_code)
 	return resp
 
+
+
+
+
 #test each API call
 def run_tests(_tests):
 	for key, val in _tests.items():
@@ -377,7 +383,7 @@ def getSubGridData(centerLat, centerLon, distanceLat, distanceLon, resolutionSqu
 
 
 if __name__ == '__main__':
-	run_tests(_tests)
+	# run_tests(_tests)
 
 
 
